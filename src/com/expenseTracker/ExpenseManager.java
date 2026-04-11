@@ -1,17 +1,17 @@
 package com.expenseTracker;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.time.Month;
 
 public class ExpenseManager {
 
     private ArrayList<Expense> expenses = new ArrayList<>();
     private int nextId = 1;
-    private Map<String, Double> budgets = new HashMap<>(); // category -> budget limit
+    private Map<String, Double> budgets = new HashMap<>();
 
     // -------------------------
     //  ADD
@@ -23,18 +23,7 @@ public class ExpenseManager {
         expenses.add(expense);
         System.out.println("  Expense added! [#" + expense.getId() + "]");
 
-        // Warn if over budget
-        if (budgets.containsKey(cat)) {
-            double spent = getTotalByCategory(cat);
-            double limit = budgets.get(cat);
-            if (spent > limit) {
-                System.out.printf("  !! WARNING: You've exceeded your %s budget! (Rs. %.2f / Rs. %.2f)%n",
-                        cat, spent, limit);
-            } else {
-                System.out.printf("  Budget check: Rs. %.2f of Rs. %.2f used for %s.%n",
-                        spent, limit, cat);
-            }
-        }
+        checkBudget(cat);
     }
 
     // -------------------------
@@ -99,11 +88,14 @@ public class ExpenseManager {
             return;
         }
         expenses.remove(target);
-        Expense updated = new Expense(id, newAmount, normalizeCategory(newCategory),
-                target.getDate(), newDescription);
+        String cat = normalizeCategory(newCategory);
+        Expense updated = new Expense(id, newAmount, cat, target.getDate(), newDescription);
         expenses.add(updated);
         expenses.sort((a, b) -> Integer.compare(a.getId(), b.getId()));
         System.out.println("  Updated: " + updated);
+
+        // FIX: also check budget after editing, not just after adding
+        checkBudget(cat);
     }
 
     public void clearAll() {
@@ -179,11 +171,49 @@ public class ExpenseManager {
         return expenses.isEmpty();
     }
 
+    // NEW: called by Main.java to show "category not found" message
+    public boolean categoryExists(String category) {
+        String cat = normalizeCategory(category);
+        for (Expense e : expenses) {
+            if (e.getCategory().equalsIgnoreCase(cat)) return true;
+        }
+        return false;
+    }
+
+    // NEW: called by Main.java handleEdit() to validate ID before asking more questions
+    public boolean expenseExists(int id) {
+        return findById(id) != null;
+    }
+
+    // NEW: called by FileHandler after loading to fix nextId so IDs don't repeat after restart
+    public void syncNextId() {
+        int maxId = 0;
+        for (Expense e : expenses) {
+            if (e.getId() > maxId) maxId = e.getId();
+        }
+        nextId = maxId + 1;
+    }
+
     // -------------------------
     //  PRIVATE UTILITIES
     // -------------------------
 
-    private String normalizeCategory(String category) {
+    // FIX: extracted budget check into one place — used by both addExpense and editExpense
+    private void checkBudget(String cat) {
+        if (budgets.containsKey(cat)) {
+            double spent = getTotalByCategory(cat);
+            double limit = budgets.get(cat);
+            if (spent > limit) {
+                System.out.printf("  !! WARNING: You've exceeded your %s budget! (Rs. %.2f / Rs. %.2f)%n",
+                        cat, spent, limit);
+            } else {
+                System.out.printf("  Budget check: Rs. %.2f of Rs. %.2f used for %s.%n",
+                        spent, limit, cat);
+            }
+        }
+    }
+
+    public static String normalizeCategory(String category) {
         if (category == null || category.isBlank()) return "Other";
         String trimmed = category.trim();
         return trimmed.substring(0, 1).toUpperCase() + trimmed.substring(1).toLowerCase();
