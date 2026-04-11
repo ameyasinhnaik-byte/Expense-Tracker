@@ -28,7 +28,8 @@ public class Main {
                 case "7"  -> handleEdit();
                 case "8"  -> handleClearAll();
                 case "9"  -> ReportPrinter.printFullReport(manager);
-                case "0"  -> { System.out.println("  Goodbye!"); return; }
+                case "10" -> handleSave();
+                case "0"  -> { handleSave(); System.out.println("  Goodbye!"); return; }
                 default   -> System.out.println("  Invalid choice. Please try again.");
             }
 
@@ -51,6 +52,7 @@ public class Main {
         System.out.println("  7.  Edit expense");
         System.out.println("  8.  Clear all expenses");
         System.out.println("  9.  View full report");
+        System.out.println("  10. Save to file");
         System.out.println("  0.  Save & quit");
         System.out.print("  Enter choice: ");
     }
@@ -136,6 +138,10 @@ public class Main {
         } else {
             System.out.println("  Cancelled.");
         }
+    }
+
+    private static void handleSave() {
+        FileHandler.saveExpenses(manager);
     }
 
     // -------------------------
