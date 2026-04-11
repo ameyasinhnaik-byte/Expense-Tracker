@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.time.Month;
 
-public class expenseManager {
+public class ExpenseManager {
 
     private ArrayList<Expense> expenses = new ArrayList<>();
     private int nextId = 1;

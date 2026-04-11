@@ -4,7 +4,7 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static expenseManager manager = new expenseManager();
+    private static ExpenseManager manager = new ExpenseManager();
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -27,6 +27,7 @@ public class Main {
                 case "6"  -> handleDelete();
                 case "7"  -> handleEdit();
                 case "8"  -> handleClearAll();
+                case "9"  -> ReportPrinter.printFullReport(manager);
                 case "0"  -> { System.out.println("  Goodbye!"); return; }
                 default   -> System.out.println("  Invalid choice. Please try again.");
             }
@@ -49,6 +50,7 @@ public class Main {
         System.out.println("  6.  Delete expense");
         System.out.println("  7.  Edit expense");
         System.out.println("  8.  Clear all expenses");
+        System.out.println("  9.  View full report");
         System.out.println("  0.  Save & quit");
         System.out.print("  Enter choice: ");
     }
