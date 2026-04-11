@@ -11,13 +11,30 @@ public class ExpenseManager {
 
     private ArrayList<Expense> expenses = new ArrayList<>();
     private int nextId = 1;
+    private Map<String, Double> budgets = new HashMap<>(); // category -> budget limit
 
-    // Add a new expense
+    // -------------------------
+    //  ADD
+    // -------------------------
+
     public void addExpense(double amount, String category, String description) {
         String cat = normalizeCategory(category);
         Expense expense = new Expense(nextId++, amount, cat, LocalDate.now(), description);
         expenses.add(expense);
         System.out.println("  Expense added! [#" + expense.getId() + "]");
+
+        // Warn if over budget
+        if (budgets.containsKey(cat)) {
+            double spent = getTotalByCategory(cat);
+            double limit = budgets.get(cat);
+            if (spent > limit) {
+                System.out.printf("  !! WARNING: You've exceeded your %s budget! (Rs. %.2f / Rs. %.2f)%n",
+                        cat, spent, limit);
+            } else {
+                System.out.printf("  Budget check: Rs. %.2f of Rs. %.2f used for %s.%n",
+                        spent, limit, cat);
+            }
+        }
     }
 
     // -------------------------
@@ -96,6 +113,34 @@ public class ExpenseManager {
     }
 
     // -------------------------
+    //  BUDGET
+    // -------------------------
+
+    public void setBudget(String category, double limit) {
+        String cat = normalizeCategory(category);
+        budgets.put(cat, limit);
+        System.out.printf("  Budget set: Rs. %.2f for %s%n", limit, cat);
+    }
+
+    public void showBudgets() {
+        if (budgets.isEmpty()) {
+            System.out.println("  No budgets set yet.");
+            return;
+        }
+        System.out.println("\n  --- Budgets ---");
+        for (Map.Entry<String, Double> entry : budgets.entrySet()) {
+            String cat = entry.getKey();
+            double limit = entry.getValue();
+            double spent = getTotalByCategory(cat);
+            double remaining = limit - spent;
+            String status = remaining < 0 ? "!! OVER BUDGET" : "OK";
+            System.out.printf("  %-15s  Spent: Rs. %8.2f  /  Limit: Rs. %.2f  [%s]%n",
+                    cat, spent, limit, status);
+        }
+        System.out.println();
+    }
+
+    // -------------------------
     //  TOTALS / HELPERS
     // -------------------------
 
@@ -111,6 +156,19 @@ public class ExpenseManager {
             map.merge(e.getCategory(), e.getAmount(), Double::sum);
         }
         return map;
+    }
+
+    public double getTotalByCategory(String category) {
+        String cat = normalizeCategory(category);
+        double total = 0;
+        for (Expense e : expenses) {
+            if (e.getCategory().equalsIgnoreCase(cat)) total += e.getAmount();
+        }
+        return total;
+    }
+
+    public Map<String, Double> getBudgets() {
+        return budgets;
     }
 
     public List<Expense> getExpenses() {
