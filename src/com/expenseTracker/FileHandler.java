@@ -24,7 +24,6 @@ public class FileHandler {
         try (PrintWriter pw = new PrintWriter(new FileWriter(EXPENSES_FILE))) {
             pw.println("id,amount,category,date,description");
             for (Expense e : expenses) {
-                // Escape commas in description by wrapping in quotes
                 String desc = e.getDescription().replace("\"", "\"\"");
                 pw.printf("%d,%.2f,%s,%s,\"%s\"%n",
                         e.getId(), e.getAmount(), e.getCategory(), e.getDate(), desc);
@@ -34,7 +33,6 @@ public class FileHandler {
             System.out.println("  ERROR saving expenses: " + ex.getMessage());
         }
 
-        // Save budgets too
         Map<String, Double> budgets = manager.getBudgets();
         if (!budgets.isEmpty()) {
             try (PrintWriter pw = new PrintWriter(new FileWriter(BUDGETS_FILE))) {
@@ -47,7 +45,6 @@ public class FileHandler {
                 System.out.println("  ERROR saving budgets: " + ex.getMessage());
             }
         }
-
     }
 
     // -------------------------
@@ -56,18 +53,19 @@ public class FileHandler {
 
     public static void loadExpenses(ExpenseManager manager) {
         File file = new File(EXPENSES_FILE);
-        if (!file.exists()) return; // First run, nothing to load
+        if (!file.exists()) return;
 
         int loaded = 0;
+        int skipped = 0; // FIX: track skipped lines and report at end
+
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line = br.readLine(); // skip header
             while ((line = br.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty()) continue;
 
-                // Handle quoted description field
                 String[] parts = parseCSVLine(line);
-                if (parts.length < 5) continue;
+                if (parts.length < 5) { skipped++; continue; }
 
                 try {
                     int id         = Integer.parseInt(parts[0].trim());
@@ -77,18 +75,27 @@ public class FileHandler {
                     String desc    = parts[4].trim().replaceAll("^\"|\"$", "")
                             .replace("\"\"", "\"");
 
-                    // Inject directly — bypass addExpense to avoid side effects
                     manager.getExpenses().add(new Expense(id, amount, cat, date, desc));
                     loaded++;
                 } catch (Exception ex) {
+                    skipped++;
                     System.out.println("  Skipping malformed line: " + line);
                 }
             }
+
             if (loaded > 0)
                 System.out.println("  Loaded " + loaded + " expense(s) from " + EXPENSES_FILE);
+
+            // FIX: report how many lines were skipped so user knows something went wrong
+            if (skipped > 0)
+                System.out.println("  Warning: " + skipped + " line(s) skipped due to bad format.");
+
         } catch (IOException ex) {
             System.out.println("  ERROR loading expenses: " + ex.getMessage());
         }
+
+        // FIX: sync nextId so new expenses don't reuse IDs from the loaded data
+        manager.syncNextId();
 
         // Load budgets
         File budgetFile = new File(BUDGETS_FILE);
@@ -99,7 +106,9 @@ public class FileHandler {
                 while ((line = br.readLine()) != null) {
                     String[] parts = line.split(",");
                     if (parts.length < 2) continue;
-                    manager.setBudget(parts[0].trim(), Double.parseDouble(parts[1].trim()));
+                    // Use normalizeCategory to keep casing consistent with expense data
+                    String cat = ExpenseManager.normalizeCategory(parts[0].trim());
+                    manager.setBudget(cat, Double.parseDouble(parts[1].trim()));
                 }
             } catch (IOException ex) {
                 System.out.println("  ERROR loading budgets: " + ex.getMessage());
@@ -112,12 +121,11 @@ public class FileHandler {
     // -------------------------
 
     private static String[] parseCSVLine(String line) {
-        // Handles one quoted field at the end (description)
         int quoteStart = line.indexOf('"');
         if (quoteStart == -1) return line.split(",", 5);
 
         String[] pre = line.substring(0, quoteStart).split(",");
-        String quoted = line.substring(quoteStart); // includes the quotes
+        String quoted = line.substring(quoteStart);
         String[] result = new String[pre.length + 1];
         System.arraycopy(pre, 0, result, 0, pre.length);
         result[pre.length] = quoted;
