@@ -62,6 +62,40 @@ public class expenseManager {
     }
 
     // -------------------------
+    //  DELETE / EDIT / CLEAR
+    // -------------------------
+
+    public void deleteExpense(int id) {
+        Expense target = findById(id);
+        if (target == null) {
+            System.out.println("  No expense found with ID #" + id);
+            return;
+        }
+        expenses.remove(target);
+        System.out.println("  Deleted: " + target);
+    }
+
+    public void editExpense(int id, double newAmount, String newCategory, String newDescription) {
+        Expense target = findById(id);
+        if (target == null) {
+            System.out.println("  No expense found with ID #" + id);
+            return;
+        }
+        expenses.remove(target);
+        Expense updated = new Expense(id, newAmount, normalizeCategory(newCategory),
+                target.getDate(), newDescription);
+        expenses.add(updated);
+        expenses.sort((a, b) -> Integer.compare(a.getId(), b.getId()));
+        System.out.println("  Updated: " + updated);
+    }
+
+    public void clearAll() {
+        expenses.clear();
+        nextId = 1;
+        System.out.println("  All expenses cleared.");
+    }
+
+    // -------------------------
     //  TOTALS / HELPERS
     // -------------------------
 
@@ -81,6 +115,10 @@ public class expenseManager {
 
     public List<Expense> getExpenses() {
         return expenses;
+    }
+
+    public boolean isEmpty() {
+        return expenses.isEmpty();
     }
 
     // -------------------------
@@ -105,5 +143,12 @@ public class expenseManager {
             System.out.printf("  Total: Rs. %.2f%n", total);
         }
         System.out.println();
+    }
+
+    private Expense findById(int id) {
+        for (Expense e : expenses) {
+            if (e.getId() == id) return e;
+        }
+        return null;
     }
 }
