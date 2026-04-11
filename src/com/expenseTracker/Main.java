@@ -9,6 +9,9 @@ public class Main {
 
     public static void main(String[] args) {
 
+        // Load saved data on startup
+        FileHandler.loadExpenses(manager);
+
         System.out.println("\n  ==============================");
         System.out.println("       EXPENSE TRACKER v2.0    ");
         System.out.println("  ==============================");
@@ -28,7 +31,9 @@ public class Main {
                 case "7"  -> handleEdit();
                 case "8"  -> handleClearAll();
                 case "9"  -> ReportPrinter.printFullReport(manager);
-                case "10" -> handleSave();
+                case "10" -> handleSetBudget();
+                case "11" -> manager.showBudgets();
+                case "12" -> handleSave();
                 case "0"  -> { handleSave(); System.out.println("  Goodbye!"); return; }
                 default   -> System.out.println("  Invalid choice. Please try again.");
             }
@@ -52,7 +57,9 @@ public class Main {
         System.out.println("  7.  Edit expense");
         System.out.println("  8.  Clear all expenses");
         System.out.println("  9.  View full report");
-        System.out.println("  10. Save to file");
+        System.out.println("  10. Set category budget");
+        System.out.println("  11. View budgets");
+        System.out.println("  12. Save to file");
         System.out.println("  0.  Save & quit");
         System.out.print("  Enter choice: ");
     }
@@ -142,6 +149,17 @@ public class Main {
 
     private static void handleSave() {
         FileHandler.saveExpenses(manager);
+    }
+
+    private static void handleSetBudget() {
+        System.out.print("  Enter category name: ");
+        String cat = scanner.nextLine().trim();
+        if (cat.isEmpty()) { System.out.println("  Category cannot be empty."); return; }
+
+        double limit = promptDouble("  Enter budget limit (Rs.): ");
+        if (limit < 0) return;
+
+        manager.setBudget(cat, limit);
     }
 
     // -------------------------

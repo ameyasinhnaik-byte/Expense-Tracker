@@ -3,15 +3,17 @@ package com.expenseTracker;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * FileHandler
- * Saves and loads expenses from a CSV file.
+ * Saves and loads expenses + budgets from a CSV file.
  * Format: id,amount,category,date,description
  */
 public class FileHandler {
 
     private static final String EXPENSES_FILE = "expenses.csv";
+    private static final String BUDGETS_FILE  = "budgets.csv";
 
     // -------------------------
     //  SAVE
@@ -30,6 +32,20 @@ public class FileHandler {
             System.out.println("  Expenses saved to " + EXPENSES_FILE);
         } catch (IOException ex) {
             System.out.println("  ERROR saving expenses: " + ex.getMessage());
+        }
+
+        // Save budgets too
+        Map<String, Double> budgets = manager.getBudgets();
+        if (!budgets.isEmpty()) {
+            try (PrintWriter pw = new PrintWriter(new FileWriter(BUDGETS_FILE))) {
+                pw.println("category,limit");
+                for (Map.Entry<String, Double> entry : budgets.entrySet()) {
+                    pw.printf("%s,%.2f%n", entry.getKey(), entry.getValue());
+                }
+                System.out.println("  Budgets saved to " + BUDGETS_FILE);
+            } catch (IOException ex) {
+                System.out.println("  ERROR saving budgets: " + ex.getMessage());
+            }
         }
 
     }
@@ -74,6 +90,21 @@ public class FileHandler {
             System.out.println("  ERROR loading expenses: " + ex.getMessage());
         }
 
+        // Load budgets
+        File budgetFile = new File(BUDGETS_FILE);
+        if (budgetFile.exists()) {
+            try (BufferedReader br = new BufferedReader(new FileReader(budgetFile))) {
+                br.readLine(); // skip header
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.split(",");
+                    if (parts.length < 2) continue;
+                    manager.setBudget(parts[0].trim(), Double.parseDouble(parts[1].trim()));
+                }
+            } catch (IOException ex) {
+                System.out.println("  ERROR loading budgets: " + ex.getMessage());
+            }
+        }
     }
 
     // -------------------------
