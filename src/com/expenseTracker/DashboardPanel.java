@@ -32,7 +32,7 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
         header.add(title, BorderLayout.WEST);
 
         JButton addBtn = AppTheme.primaryButton("+ Add Expense", AppTheme.ACCENT_GREEN);
-        addBtn.addActionListener(e -> window.goToExpenses());
+        addBtn.addActionListener(e -> { window.goToExpenses(); window.openAddExpenseDialog(); });
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         btnRow.setOpaque(false);
         btnRow.add(addBtn);

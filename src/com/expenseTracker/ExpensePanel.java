@@ -1,11 +1,10 @@
 package com.expenseTracker;
 
-import javax.swing.*;
-import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.table.*;
 
 /**
  * ExpensePanel
@@ -80,6 +79,33 @@ public class ExpensePanel extends JPanel implements MainWindow.Refreshable {
         add(filterBar, BorderLayout.CENTER); // temp, replaced below
 
         // ── Table ───────────────────────────────────────────────
+            class CustomScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
+
+        @Override
+        protected void configureScrollBarColors() {
+            this.thumbColor = AppTheme.ACCENT_BLUE; // scrollbar handle
+            this.trackColor = AppTheme.BG_PANEL;     // background track
+        }
+
+        @Override
+        protected JButton createDecreaseButton(int orientation) {
+            return createZeroButton();
+        }
+
+        @Override
+        protected JButton createIncreaseButton(int orientation) {
+            return createZeroButton();
+        }
+
+        private JButton createZeroButton() {
+            JButton btn = new JButton();
+            btn.setPreferredSize(new Dimension(0, 0));
+            btn.setMinimumSize(new Dimension(0, 0));
+            btn.setMaximumSize(new Dimension(0, 0));
+            return btn;
+        }
+    }
+
         tableModel = new ExpenseTableModel();
         table = new JTable(tableModel);
         styleTable();
@@ -87,9 +113,11 @@ public class ExpensePanel extends JPanel implements MainWindow.Refreshable {
         JScrollPane scroll = new JScrollPane(table,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
             JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.getVerticalScrollBar().setUI(new CustomScrollBarUI());
+        scroll.getHorizontalScrollBar().setUI(new CustomScrollBarUI());
         scroll.setOpaque(false);
         scroll.getViewport().setBackground(AppTheme.BG_PANEL);
-        scroll.setBorder(new AppTheme.RoundBorder(AppTheme.BORDER_COLOR, AppTheme.CORNER_RADIUS));
+        scroll.setBorder(BorderFactory.createEmptyBorder());
 
         // ── Action buttons row ───────────────────────────────────
         JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
@@ -109,6 +137,19 @@ public class ExpensePanel extends JPanel implements MainWindow.Refreshable {
             confirmDelete(tableModel.getExpense(row));
         });
 
+        JButton clearAllBtn = AppTheme.ghostButton("  Clear All");
+            clearAllBtn.setForeground(AppTheme.ACCENT_RED);
+                clearAllBtn.addActionListener(e -> {
+                    if (manager.isEmpty()) { toast("No expenses to clear."); return; }
+                    int choice = JOptionPane.showConfirmDialog(this,
+                        "Delete ALL expenses? This cannot be undone.",
+                        "Clear All", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                    if (choice == JOptionPane.YES_OPTION) {
+                        manager.clearAll();
+                        refresh();
+            }
+        });
+        actionRow.add(clearAllBtn);
         actionRow.add(editBtn);
         actionRow.add(deleteBtn);
 
@@ -143,6 +184,18 @@ public class ExpensePanel extends JPanel implements MainWindow.Refreshable {
         header.setFont(AppTheme.FONT_LABEL);
         header.setReorderingAllowed(false);
         header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AppTheme.BORDER_COLOR));
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override public Component getTableCellRendererComponent(
+                    JTable t, Object val, boolean sel, boolean foc, int row, int col) {
+                JLabel lbl = (JLabel) super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+                lbl.setBackground(AppTheme.BG_DARK);
+                lbl.setForeground(AppTheme.TEXT_SECONDARY);
+                lbl.setFont(AppTheme.FONT_HEADING);
+                lbl.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
+                lbl.setOpaque(true);
+                return lbl;
+            }
+        });
 
         // Column widths
         int[] widths = { 50, 100, 120, 100, 300 };
@@ -195,7 +248,7 @@ public class ExpensePanel extends JPanel implements MainWindow.Refreshable {
 
     // ─── ADD DIALOG ─────────────────────────────────────────────
 
-    private void showAddDialog() {
+    public void showAddDialog() {
         JDialog dlg = styledDialog("Add Expense", 420, 320);
         JPanel form = formPanel();
 
@@ -298,7 +351,8 @@ public class ExpensePanel extends JPanel implements MainWindow.Refreshable {
         dlg.setLocationRelativeTo(this);
         dlg.getContentPane().setBackground(AppTheme.BG_PANEL);
         dlg.setLayout(new BorderLayout(0, 0));
-        dlg.getRootPane().setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        dlg.setBackground(AppTheme.BG_PANEL);
+        dlg.getRootPane().setBorder(BorderFactory.createEmptyBorder(10, 14, 18, 14));
         return dlg;
     }
 

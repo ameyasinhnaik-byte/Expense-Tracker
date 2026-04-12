@@ -1,8 +1,8 @@
 package com.expenseTracker;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import javax.swing.*;
 
 /**
  * MainWindow
@@ -86,7 +86,7 @@ public class MainWindow extends JFrame {
         // ── Logo area ──
 JPanel logoArea = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 22));
 logoArea.setOpaque(false);
-JLabel logo = new JLabel("₹ Tracker");
+JLabel logo = new JLabel("₹ EXPENSIO");
 logo.setFont(AppTheme.FONT_TITLE);
 logo.setForeground(AppTheme.ACCENT_GREEN);
 logoArea.add(logo);
@@ -113,16 +113,29 @@ final boolean[] isDark = {true};
 themeToggle.addActionListener(e -> {
     isDark[0] = !isDark[0];
     if (isDark[0]) {
-        AppTheme.BG_DARK    = new Color(13, 17, 23);
-        AppTheme.BG_PANEL   = new Color(22, 27, 34);
-        AppTheme.BG_INPUT   = new Color(30, 37, 48);
+        AppTheme.BG_DARK         = new Color(13, 17, 23);
+        AppTheme.BG_PANEL        = new Color(22, 27, 34);
+        AppTheme.BG_INPUT        = new Color(30, 37, 48);
+        AppTheme.TEXT_PRIMARY_MUT   = new Color(230, 237, 243);
+        AppTheme.TEXT_SECONDARY_MUT = new Color(139, 148, 158);
+        AppTheme.TEXT_MUTED_MUT     = new Color(72, 82, 94);
+        AppTheme.BORDER_COLOR_MUT   = new Color(33, 41, 54);
+        AppTheme.BG_ROW_ALT_MUT     = new Color(18, 23, 30);
+        AppTheme.BG_HOVER_MUT       = new Color(35, 45, 60);
         themeToggle.setText("☀ Light");
     } else {
-        AppTheme.BG_DARK    = new Color(245, 245, 250);
-        AppTheme.BG_PANEL   = new Color(255, 255, 255);
-        AppTheme.BG_INPUT   = new Color(230, 235, 240);
+        AppTheme.BG_DARK         = new Color(240, 242, 245);
+        AppTheme.BG_PANEL        = new Color(255, 255, 255);
+        AppTheme.BG_INPUT        = new Color(228, 232, 238);
+        AppTheme.TEXT_PRIMARY_MUT   = new Color(15, 20, 30);
+        AppTheme.TEXT_SECONDARY_MUT = new Color(80, 90, 110);
+        AppTheme.TEXT_MUTED_MUT     = new Color(140, 150, 165);
+        AppTheme.BORDER_COLOR_MUT   = new Color(200, 208, 220);
+        AppTheme.BG_ROW_ALT_MUT     = new Color(245, 247, 250);
+        AppTheme.BG_HOVER_MUT       = new Color(215, 222, 232);
         themeToggle.setText("☾ Dark");
     }
+    AppTheme.applyMutable();
     SwingUtilities.updateComponentTreeUI(MainWindow.this);
     repaint();
 });
@@ -196,6 +209,7 @@ sidebar.add(logoArea);
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);
         btn.setFocusPainted(false);
+        btn.setMargin(new Insets(0, 0, 0, 8));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btn.setMaximumSize(new Dimension(AppTheme.NAV_WIDTH, 44));
         btn.setPreferredSize(new Dimension(AppTheme.NAV_WIDTH, 44));
@@ -223,6 +237,14 @@ sidebar.add(logoArea);
     }
 
     public void goToExpenses() { switchTo(1); }
+    public void openAddExpenseDialog() {
+        for (Component c : contentArea.getComponents()) {
+            if (c.isVisible() && c instanceof ExpensePanel) {
+                ((ExpensePanel) c).showAddDialog();
+                break;
+            }
+        }
+    }
     public void goToBudgets()  { switchTo(2); }
 
     /** Marker interface for panels that refresh their data when shown */
