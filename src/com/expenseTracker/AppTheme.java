@@ -41,7 +41,12 @@ static {
 
 /** Returns a color for a category, or a default if not found */
 public static Color categoryColor(String category) {
-    return CATEGORY_COLORS.getOrDefault(category, ACCENT_PURPLE);
+    Color found = CATEGORY_COLORS.get(category);
+    if (found != null) return found;
+    // Generate a consistent color for unknown categories
+    int hash = Math.abs(category.hashCode());
+    float hue = (hash % 360) / 360.0f;
+    return Color.getHSBColor(hue, 0.6f, 0.9f);
 }
     public static final Color TEXT_PRIMARY   = new Color(230, 237, 243);
     public static final Color TEXT_SECONDARY = new Color(139, 148, 158);

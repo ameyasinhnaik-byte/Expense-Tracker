@@ -6,19 +6,11 @@ import java.util.*;
 import java.util.List;
 import javax.swing.*;
 
-/**
- * DashboardPanel
- * Landing screen. Shows: total spent, this month, top category,
- * recent expenses list, and a horizontal category bar chart.
- *
- * Branch: feature/swing-core
- */
 public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
 
     private final ExpenseManager manager;
     private final MainWindow window;
 
-    // Live labels updated on refresh
     private JLabel lblTotal, lblMonth, lblTopCat, lblCount;
     private JPanel recentList, chartPanel;
 
@@ -32,7 +24,6 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
     }
 
     private void build() {
-        // ── Top heading row ──────────────────────────────────────
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
         JLabel title = new JLabel("Dashboard");
@@ -41,39 +32,34 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
         header.add(title, BorderLayout.WEST);
 
         JButton addBtn = AppTheme.primaryButton("+ Add Expense", AppTheme.ACCENT_GREEN);
-        addBtn.addActionListener(e -> {
-            window.goToExpenses();
-        });
+        addBtn.addActionListener(e -> window.goToExpenses());
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         btnRow.setOpaque(false);
         btnRow.add(addBtn);
         header.add(btnRow, BorderLayout.EAST);
         add(header, BorderLayout.NORTH);
 
-        // ── Main body ────────────────────────────────────────────
         JPanel body = new JPanel(new GridBagLayout());
         body.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(12, 0, 0, 12);
 
-        // Row 0: 4 stat cards
         gbc.gridy = 0; gbc.weighty = 0;
         gbc.weightx = 1; gbc.gridwidth = 1;
 
-        lblTotal  = bigStatLabel("₹ 0.00", "Total Spent");
-        lblMonth  = bigStatLabel("₹ 0.00", "This Month");
-        lblTopCat = bigStatLabel("—",      "Top Category");
-        lblCount  = bigStatLabel("0",      "Total Entries");
+        lblTotal  = new JLabel("Rs. 0.00");
+        lblMonth  = new JLabel("Rs. 0.00");
+        lblTopCat = new JLabel("-");
+        lblCount  = new JLabel("0");
 
-        gbc.gridx = 0; body.add(statCard(lblTotal,  AppTheme.ACCENT_GREEN),  gbc);
-        gbc.gridx = 1; body.add(statCard(lblMonth,  AppTheme.ACCENT_BLUE),   gbc);
-        gbc.gridx = 2; body.add(statCard(lblTopCat, AppTheme.ACCENT_PURPLE), gbc);
-        gbc.gridx = 3; gbc.insets = new Insets(12,0,0,0);
-                        body.add(statCard(lblCount,  AppTheme.ACCENT_AMBER),  gbc);
+        gbc.gridx = 0; body.add(statCard(lblTotal,  "Total Spent",   AppTheme.ACCENT_GREEN),  gbc);
+        gbc.gridx = 1; body.add(statCard(lblMonth,  "This Month",    AppTheme.ACCENT_BLUE),   gbc);
+        gbc.gridx = 2; body.add(statCard(lblTopCat, "Top Category",  AppTheme.ACCENT_PURPLE), gbc);
+        gbc.gridx = 3; gbc.insets = new Insets(12, 0, 0, 0);
+                        body.add(statCard(lblCount,  "Entries",       AppTheme.ACCENT_AMBER),  gbc);
 
-        // Row 1: recent list (left) + chart (right)
-        gbc.gridy = 1; gbc.weighty = 1.0; gbc.insets = new Insets(12,0,0,12);
+        gbc.gridy = 1; gbc.weighty = 1.0; gbc.insets = new Insets(12, 0, 0, 12);
 
         recentList = new JPanel();
         recentList.setLayout(new BoxLayout(recentList, BoxLayout.Y_AXIS));
@@ -81,8 +67,7 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
 
         JPanel recentCard = AppTheme.card();
         recentCard.setLayout(new BorderLayout(0, 10));
-        JLabel recentTitle = AppTheme.heading("Recent Expenses");
-        recentCard.add(recentTitle, BorderLayout.NORTH);
+        recentCard.add(AppTheme.heading("Recent Expenses"), BorderLayout.NORTH);
         JScrollPane recentScroll = new JScrollPane(recentList,
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         recentScroll.setOpaque(false);
@@ -95,7 +80,7 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
         chartPanel = new JPanel() {
             @Override protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                drawChart(g);
+                drawPieChart(g);
             }
         };
         chartPanel.setOpaque(false);
@@ -105,15 +90,13 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
         chartCard.add(AppTheme.heading("Spending by Category"), BorderLayout.NORTH);
         chartCard.add(chartPanel, BorderLayout.CENTER);
 
-        gbc.gridx = 2; gbc.gridwidth = 2; gbc.insets = new Insets(12,0,0,0);
+        gbc.gridx = 2; gbc.gridwidth = 2; gbc.insets = new Insets(12, 0, 0, 0);
         body.add(chartCard, gbc);
 
         add(body, BorderLayout.CENTER);
     }
 
-    // ─── CHART DRAWING ──────────────────────────────────────────
-
-    private void drawChart(Graphics g) {
+    private void drawPieChart(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -122,66 +105,56 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
             g2.setColor(AppTheme.TEXT_MUTED);
             g2.setFont(AppTheme.FONT_BODY);
             g2.drawString("No data yet.", 20, chartPanel.getHeight() / 2);
-            g2.dispose(); return;
+            g2.dispose();
+            return;
         }
 
         List<Map.Entry<String, Double>> entries = new ArrayList<>(totals.entrySet());
         entries.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
         if (entries.size() > 7) entries = entries.subList(0, 7);
 
-        double max = entries.get(0).getValue();
-        int W = chartPanel.getWidth() - 16;
-        int rowH = Math.min(36, (chartPanel.getHeight() - 10) / entries.size());
-        int barMaxW = W - 130;
+        double total = 0;
+        for (Map.Entry<String, Double> e : entries) total += e.getValue();
 
-        Color[] palette = {
-            AppTheme.ACCENT_GREEN, AppTheme.ACCENT_BLUE, AppTheme.ACCENT_PURPLE,
-            AppTheme.ACCENT_AMBER, AppTheme.ACCENT_RED, new Color(64,196,255), new Color(255,120,198)
-        };
+        int W = chartPanel.getWidth();
+        int H = chartPanel.getHeight();
+        int diameter = Math.min(W / 2, H - 40);
+        int px = (W / 4) - (diameter / 2);
+        int py = (H - diameter) / 2;
 
-        for (int i = 0; i < entries.size(); i++) {
-            String cat  = entries.get(i).getKey();
-            double val  = entries.get(i).getValue();
-            Color  col  = palette[i % palette.length];
-            int    y    = 8 + i * (rowH + 6);
-            int    barW = (int)(val / max * barMaxW);
+        double startAngle = 0;
+        for (Map.Entry<String, Double> entry : entries) {
+            double slice = (entry.getValue() / total) * 360.0;
+            Color col = AppTheme.categoryColor(entry.getKey());
+            g2.setColor(col);
+            g2.fillArc(px, py, diameter, diameter, (int) startAngle, (int) slice);
+            g2.setColor(AppTheme.BG_DARK);
+            g2.setStroke(new BasicStroke(2));
+            g2.drawArc(px, py, diameter, diameter, (int) startAngle, (int) slice);
+            startAngle += slice;
+        }
 
-            // Background track
-            g2.setColor(AppTheme.BG_INPUT);
-            g2.fillRoundRect(110, y + 8, barMaxW, rowH - 14, 6, 6);
-
-            // Bar
-            g2.setColor(new Color(col.getRed(), col.getGreen(), col.getBlue(), 200));
-            if (barW > 0) g2.fillRoundRect(110, y + 8, barW, rowH - 14, 6, 6);
-
-            // Category label
+        int legendX = W / 2 + 10;
+        int legendY = 20;
+        for (Map.Entry<String, Double> entry : entries) {
+            Color col = AppTheme.categoryColor(entry.getKey());
+            g2.setColor(col);
+            g2.fillRoundRect(legendX, legendY, 12, 12, 4, 4);
             g2.setFont(AppTheme.FONT_SMALL);
             g2.setColor(AppTheme.TEXT_SECONDARY);
-            g2.drawString(truncate(cat, 12), 0, y + rowH - 12);
-
-            // Amount
-            g2.setFont(AppTheme.FONT_SMALL);
+            g2.drawString(entry.getKey(), legendX + 18, legendY + 11);
             g2.setColor(col);
-            g2.drawString(String.format("₹%.0f", val), 110 + barW + 6, y + rowH - 12);
+            g2.drawString(String.format("Rs.%.0f", entry.getValue()), legendX + 18, legendY + 24);
+            legendY += 38;
         }
+
         g2.dispose();
     }
 
-    private String truncate(String s, int max) {
-        return s.length() > max ? s.substring(0, max - 1) + "…" : s;
-    }
-
-    // ─── STAT CARD BUILDER ──────────────────────────────────────
-
-    private JLabel bigStatLabel(String value, String caption) {
-        return new JLabel(value); // value label — caption attached in statCard
-    }
-
-    private JPanel statCard(JLabel valueLabel, Color accent) {
+    private JPanel statCard(JLabel valueLabel, String caption, Color accent) {
         JPanel card = AppTheme.card();
         card.setLayout(new BorderLayout(0, 6));
 
-        // top accent bar
         JPanel accentBar = new JPanel() {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -198,16 +171,11 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
         valueLabel.setForeground(accent);
         card.add(valueLabel, BorderLayout.CENTER);
 
-        // caption = the label's name field (hacky but works for static cards)
-        // We derive caption from the accent color
-        JLabel cap = AppTheme.subLabel("—");
-        cap.setName("caption");
+        JLabel cap = AppTheme.subLabel(caption);
         card.add(cap, BorderLayout.SOUTH);
 
         return card;
     }
-
-    // ─── RECENT EXPENSE ROW ─────────────────────────────────────
 
     private JPanel recentRow(Expense e) {
         JPanel row = new JPanel(new BorderLayout(10, 0));
@@ -219,7 +187,8 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
         desc.setFont(AppTheme.FONT_BODY);
         desc.setForeground(AppTheme.TEXT_PRIMARY);
 
-        JLabel cat = AppTheme.badge(e.getCategory(), AppTheme.ACCENT_PURPLE);
+        Color catColor = AppTheme.categoryColor(e.getCategory());
+        JLabel cat = AppTheme.badge(e.getCategory(), catColor);
 
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         left.setOpaque(false);
@@ -227,14 +196,13 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
         left.add(Box.createHorizontalStrut(8));
         left.add(cat);
 
-        JLabel amt = new JLabel("₹ " + String.format("%.2f", e.getAmount()));
+        JLabel amt = new JLabel("Rs. " + String.format("%.2f", e.getAmount()));
         amt.setFont(AppTheme.FONT_LABEL);
         amt.setForeground(AppTheme.ACCENT_GREEN);
 
         row.add(left, BorderLayout.CENTER);
         row.add(amt,  BorderLayout.EAST);
 
-        // Separator
         JPanel wrap = new JPanel();
         wrap.setLayout(new BoxLayout(wrap, BoxLayout.Y_AXIS));
         wrap.setOpaque(false);
@@ -243,57 +211,42 @@ public class DashboardPanel extends JPanel implements MainWindow.Refreshable {
         return wrap;
     }
 
-    // ─── REFRESH ────────────────────────────────────────────────
-
     @Override public void refresh() {
         List<Expense> expenses = manager.getExpenses();
 
-        // Stat cards
         double total = manager.getTotal();
-        int month    = LocalDate.now().getMonthValue();
-        int year     = LocalDate.now().getYear();
-        double thisMonth = expenses.stream()
-            .filter(e -> e.getDate().getMonthValue() == month && e.getDate().getYear() == year)
-            .mapToDouble(Expense::getAmount).sum();
+        int month = LocalDate.now().getMonthValue();
+        int year  = LocalDate.now().getYear();
+        double thisMonth = 0;
+        for (Expense e : expenses) {
+            if (e.getDate().getMonthValue() == month && e.getDate().getYear() == year)
+                thisMonth += e.getAmount();
+        }
 
         Map<String, Double> catTotals = manager.getCategoryTotals();
-        String topCat = catTotals.entrySet().stream()
-            .max(Map.Entry.comparingByValue())
-            .map(Map.Entry::getKey).orElse("—");
+        String topCat = "-";
+        double maxVal = 0;
+        for (Map.Entry<String, Double> entry : catTotals.entrySet()) {
+            if (entry.getValue() > maxVal) { maxVal = entry.getValue(); topCat = entry.getKey(); }
+        }
 
-        lblTotal.setText("₹ " + String.format("%.2f", total));
-        lblMonth.setText("₹ " + String.format("%.2f", thisMonth));
+        lblTotal.setText("Rs. " + String.format("%.2f", total));
+        lblMonth.setText("Rs. " + String.format("%.2f", thisMonth));
         lblTopCat.setText(topCat);
         lblCount.setText(String.valueOf(expenses.size()));
 
-        // Caption labels — re-derive from panel structure
-        updateCaption(lblTotal,  "Total Spent");
-        updateCaption(lblMonth,  "This Month");
-        updateCaption(lblTopCat, "Top Category");
-        updateCaption(lblCount,  "Entries");
-
-        // Recent expenses (last 6)
         recentList.removeAll();
         List<Expense> copy = new ArrayList<>(expenses);
         Collections.reverse(copy);
-        copy.stream().limit(6).forEach(e -> recentList.add(recentRow(e)));
+        int limit = Math.min(6, copy.size());
+        for (int i = 0; i < limit; i++) recentList.add(recentRow(copy.get(i)));
         if (expenses.isEmpty()) {
             JLabel empty = AppTheme.subLabel("No expenses yet. Add one!");
-            empty.setBorder(BorderFactory.createEmptyBorder(20,0,0,0));
+            empty.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
             recentList.add(empty);
         }
         recentList.revalidate();
         recentList.repaint();
         chartPanel.repaint();
-    }
-
-    private void updateCaption(JLabel valueLabel, String caption) {
-        Container card = valueLabel.getParent();
-        if (card == null) return;
-        for (Component c : card.getComponents()) {
-            if (c instanceof JLabel && "caption".equals(c.getName())) {
-                ((JLabel) c).setText(caption);
-            }
-        }
     }
 }
