@@ -14,9 +14,9 @@ import java.awt.*;
 public class AppTheme {
 
     // ─── PALETTE ────────────────────────────────────────────────
-    public static final Color BG_DARK        = new Color(13, 17, 23);       // deep navy black
-    public static final Color BG_PANEL       = new Color(22, 27, 34);       // card background
-    public static final Color BG_INPUT       = new Color(30, 37, 48);       // input fields
+    public static  Color BG_DARK        = new Color(13, 17, 23);       // deep navy black
+    public static Color BG_PANEL       = new Color(22, 27, 34);       // card background
+    public static Color BG_INPUT       = new Color(30, 37, 48);       // input fields
     public static final Color BG_ROW_ALT     = new Color(18, 23, 30);       // alternating table row
     public static final Color BG_HOVER       = new Color(35, 45, 60);       // hover state
 
@@ -26,6 +26,23 @@ public class AppTheme {
     public static final Color ACCENT_BLUE    = new Color(88, 166, 255);     // links / info
     public static final Color ACCENT_PURPLE  = new Color(163, 113, 247);    // category tag
 
+// ─── CATEGORY COLORS ────────────────────────────────────────
+public static final java.util.Map<String, Color> CATEGORY_COLORS = new java.util.LinkedHashMap<>();
+static {
+    CATEGORY_COLORS.put("Food",          new Color(255, 107, 107));  // red
+    CATEGORY_COLORS.put("Travel",        new Color(88,  166, 255));  // blue
+    CATEGORY_COLORS.put("Shopping",      new Color(163, 113, 247));  // purple
+    CATEGORY_COLORS.put("Health",        new Color(35,  197, 94));   // green
+    CATEGORY_COLORS.put("Entertainment", new Color(255, 171, 0));    // amber
+    CATEGORY_COLORS.put("Education",     new Color(0,   210, 211));  // teal
+    CATEGORY_COLORS.put("Bills",         new Color(240, 71,  71));   // dark red
+    CATEGORY_COLORS.put("Other",         new Color(139, 148, 158));  // grey
+}
+
+/** Returns a color for a category, or a default if not found */
+public static Color categoryColor(String category) {
+    return CATEGORY_COLORS.getOrDefault(category, ACCENT_PURPLE);
+}
     public static final Color TEXT_PRIMARY   = new Color(230, 237, 243);
     public static final Color TEXT_SECONDARY = new Color(139, 148, 158);
     public static final Color TEXT_MUTED     = new Color(72, 82, 94);

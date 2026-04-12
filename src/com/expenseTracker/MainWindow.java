@@ -84,17 +84,50 @@ public class MainWindow extends JFrame {
         sidebar.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
         // ── Logo area ──
-        JPanel logoArea = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 22));
-        logoArea.setOpaque(false);
-        JLabel logo = new JLabel("₹ Tracker");
-        logo.setFont(AppTheme.FONT_TITLE);
-        logo.setForeground(AppTheme.ACCENT_GREEN);
-        logoArea.add(logo);
-        sidebar.add(logoArea);
+JPanel logoArea = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 22));
+logoArea.setOpaque(false);
+JLabel logo = new JLabel("₹ Tracker");
+logo.setFont(AppTheme.FONT_TITLE);
+logo.setForeground(AppTheme.ACCENT_GREEN);
+logoArea.add(logo);
 
-        sidebar.add(AppTheme.separator());
-        sidebar.add(Box.createVerticalStrut(12));
-
+// ── Dark/Light mode toggle ──
+JButton themeToggle = new JButton("☀ Light") {
+    @Override protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(AppTheme.BG_INPUT);
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+        g2.dispose();
+        super.paintComponent(g);
+    }
+};
+themeToggle.setFont(AppTheme.FONT_SMALL);
+themeToggle.setForeground(AppTheme.ACCENT_AMBER);
+themeToggle.setContentAreaFilled(false);
+themeToggle.setBorderPainted(false);
+themeToggle.setFocusPainted(false);
+themeToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+themeToggle.setPreferredSize(new Dimension(80, 28));
+final boolean[] isDark = {true};
+themeToggle.addActionListener(e -> {
+    isDark[0] = !isDark[0];
+    if (isDark[0]) {
+        AppTheme.BG_DARK    = new Color(13, 17, 23);
+        AppTheme.BG_PANEL   = new Color(22, 27, 34);
+        AppTheme.BG_INPUT   = new Color(30, 37, 48);
+        themeToggle.setText("☀ Light");
+    } else {
+        AppTheme.BG_DARK    = new Color(245, 245, 250);
+        AppTheme.BG_PANEL   = new Color(255, 255, 255);
+        AppTheme.BG_INPUT   = new Color(230, 235, 240);
+        themeToggle.setText("☾ Dark");
+    }
+    SwingUtilities.updateComponentTreeUI(MainWindow.this);
+    repaint();
+});
+logoArea.add(themeToggle);
+sidebar.add(logoArea);
         // ── Nav items ──
         String[][] navItems = {
             { "  Dashboard",  "●" },
