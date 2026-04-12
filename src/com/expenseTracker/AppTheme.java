@@ -1,8 +1,8 @@
 package com.expenseTracker;
 
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.*;
-import java.awt.*;
 
 /**
  * AppTheme
@@ -14,11 +14,19 @@ import java.awt.*;
 public class AppTheme {
 
     // ─── PALETTE ────────────────────────────────────────────────
-    public static  Color BG_DARK        = new Color(13, 17, 23);       // deep navy black
+    public static Color BG_DARK        = new Color(13, 17, 23);       // deep navy black
     public static Color BG_PANEL       = new Color(22, 27, 34);       // card background
     public static Color BG_INPUT       = new Color(30, 37, 48);       // input fields
-    public static final Color BG_ROW_ALT     = new Color(18, 23, 30);       // alternating table row
-    public static final Color BG_HOVER       = new Color(35, 45, 60);       // hover state
+    public static Color BG_ROW_ALT     = new Color(18, 23, 30);       // alternating table row
+    public static Color BG_HOVER       = new Color(35, 45, 60);       // hover state
+
+    // Mutable theme color aliases (updated together on theme switch)
+    public static Color TEXT_PRIMARY_MUT   = new Color(230, 237, 243);
+    public static Color TEXT_SECONDARY_MUT = new Color(139, 148, 158);
+    public static Color TEXT_MUTED_MUT     = new Color(72, 82, 94);
+    public static Color BORDER_COLOR_MUT   = new Color(33, 41, 54);
+    public static Color BG_ROW_ALT_MUT     = new Color(18, 23, 30);
+    public static Color BG_HOVER_MUT       = new Color(35, 45, 60);
 
     public static final Color ACCENT_GREEN   = new Color(35, 197, 94);      // primary action / positive
     public static final Color ACCENT_RED     = new Color(240, 71, 71);      // delete / warning
@@ -48,10 +56,11 @@ public static Color categoryColor(String category) {
     float hue = (hash % 360) / 360.0f;
     return Color.getHSBColor(hue, 0.6f, 0.9f);
 }
-    public static final Color TEXT_PRIMARY   = new Color(230, 237, 243);
-    public static final Color TEXT_SECONDARY = new Color(139, 148, 158);
-    public static final Color TEXT_MUTED     = new Color(72, 82, 94);
-    public static final Color BORDER_COLOR   = new Color(33, 41, 54);
+    // Convenience aliases pointing to mutable colors
+    public static Color TEXT_PRIMARY   = TEXT_PRIMARY_MUT;
+    public static Color TEXT_SECONDARY = TEXT_SECONDARY_MUT;
+    public static Color TEXT_MUTED     = TEXT_MUTED_MUT;
+    public static Color BORDER_COLOR   = BORDER_COLOR_MUT;
 
     // ─── TYPOGRAPHY ─────────────────────────────────────────────
     public static final Font FONT_TITLE      = new Font("SansSerif", Font.BOLD,  26);
@@ -64,7 +73,7 @@ public static Color categoryColor(String category) {
     public static final Font FONT_NAV        = new Font("SansSerif", Font.BOLD,  13);
 
     // ─── DIMENSIONS ─────────────────────────────────────────────
-    public static final int  NAV_WIDTH       = 200;
+    public static final int  NAV_WIDTH       = 220;
     public static final int  CORNER_RADIUS   = 10;
     public static final int  BTN_HEIGHT      = 38;
     public static final int  INPUT_HEIGHT    = 38;
@@ -96,6 +105,37 @@ public static Color categoryColor(String category) {
         UIManager.put("Table.gridColor",               BORDER_COLOR);
         UIManager.put("Table.selectionBackground",     BG_HOVER);
         UIManager.put("Table.selectionForeground",     ACCENT_GREEN);
+        UIManager.put("TableHeader.background",        BG_DARK);
+        UIManager.put("TableHeader.foreground",        TEXT_SECONDARY);
+        UIManager.put("Label.foreground",              TEXT_PRIMARY);
+    }
+
+    /** Update UIManager and static aliases after a theme switch */
+    public static void applyMutable() {
+        TEXT_PRIMARY   = TEXT_PRIMARY_MUT;
+        TEXT_SECONDARY = TEXT_SECONDARY_MUT;
+        TEXT_MUTED     = TEXT_MUTED_MUT;
+        BORDER_COLOR   = BORDER_COLOR_MUT;
+        BG_ROW_ALT     = BG_ROW_ALT_MUT;
+        BG_HOVER       = BG_HOVER_MUT;
+
+        UIManager.put("Panel.background",              BG_DARK);
+        UIManager.put("OptionPane.background",         BG_PANEL);
+        UIManager.put("OptionPane.messageForeground",  TEXT_PRIMARY);
+        UIManager.put("Button.background",             BG_INPUT);
+        UIManager.put("Button.foreground",             TEXT_PRIMARY);
+        UIManager.put("TextField.background",          BG_INPUT);
+        UIManager.put("TextField.foreground",          TEXT_PRIMARY);
+        UIManager.put("ComboBox.background",           BG_INPUT);
+        UIManager.put("ComboBox.foreground",           TEXT_PRIMARY);
+        UIManager.put("ScrollBar.background",          BG_PANEL);
+        UIManager.put("ScrollBar.thumb",               BG_INPUT);
+        UIManager.put("ScrollBar.thumbHighlight",      BG_HOVER);
+        UIManager.put("ScrollBar.track",               BG_PANEL);
+        UIManager.put("Table.background",              BG_PANEL);
+        UIManager.put("Table.foreground",              TEXT_PRIMARY);
+        UIManager.put("Table.gridColor",               BORDER_COLOR);
+        UIManager.put("Table.selectionBackground",     BG_HOVER);
         UIManager.put("TableHeader.background",        BG_DARK);
         UIManager.put("TableHeader.foreground",        TEXT_SECONDARY);
         UIManager.put("Label.foreground",              TEXT_PRIMARY);

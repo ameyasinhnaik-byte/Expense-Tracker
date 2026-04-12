@@ -1,9 +1,9 @@
 package com.expenseTracker;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import javax.swing.*;
 
 /**
  * BudgetPanel
@@ -27,18 +27,42 @@ public class BudgetPanel extends JPanel implements MainWindow.Refreshable {
         build();
     }
 
+    // ─── CUSTOM SCROLLBAR ───────────────────────────────────────
+    static class CustomScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
+        @Override protected void configureScrollBarColors() {
+            this.thumbColor = AppTheme.ACCENT_BLUE;
+            this.trackColor = AppTheme.BG_PANEL;
+        }
+        @Override protected JButton createDecreaseButton(int o) { return zeroBtn(); }
+        @Override protected JButton createIncreaseButton(int o) { return zeroBtn(); }
+        private JButton zeroBtn() {
+            JButton b = new JButton();
+            b.setPreferredSize(new Dimension(0, 0));
+            b.setMinimumSize(new Dimension(0, 0));
+            b.setMaximumSize(new Dimension(0, 0));
+            return b;
+        }
+    }
+
     private void build() {
         // ── Header ──────────────────────────────────────────────
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
 
+        JPanel titleBlock = new JPanel();
+        titleBlock.setLayout(new BoxLayout(titleBlock, BoxLayout.Y_AXIS));
+        titleBlock.setOpaque(false);
         JLabel title = new JLabel("Budgets");
         title.setFont(AppTheme.FONT_TITLE);
         title.setForeground(AppTheme.TEXT_PRIMARY);
-        header.add(title, BorderLayout.WEST);
+        JLabel subtitle = AppTheme.subLabel("Set spending limits per category to stay on track.");
+        titleBlock.add(title);
+        titleBlock.add(Box.createVerticalStrut(2));
+        titleBlock.add(subtitle);
+        header.add(titleBlock, BorderLayout.WEST);
 
         JButton addBtn = AppTheme.primaryButton("+ Set Budget", AppTheme.ACCENT_AMBER);
-        addBtn.addActionListener(e -> showSetBudgetDialog());
+        addBtn.addActionListener(e -> showSetBudgetDialog(null));
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         btnRow.setOpaque(false);
         btnRow.add(addBtn);
@@ -54,8 +78,10 @@ public class BudgetPanel extends JPanel implements MainWindow.Refreshable {
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.setOpaque(false);
-        scroll.getViewport().setOpaque(false);
-        scroll.setBorder(null);
+        scroll.getViewport().setBackground(AppTheme.BG_DARK);
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getVerticalScrollBar().setUI(new CustomScrollBarUI());
+        scroll.getHorizontalScrollBar().setUI(new CustomScrollBarUI());
 
         JPanel center = new JPanel(new BorderLayout());
         center.setOpaque(false);
@@ -143,14 +169,15 @@ public class BudgetPanel extends JPanel implements MainWindow.Refreshable {
 
     // ─── SET BUDGET DIALOG ──────────────────────────────────────
 
-    private void showSetBudgetDialog() {
+    private void showSetBudgetDialog(String preselectedCategory) {
         JDialog dlg = new JDialog((Frame) SwingUtilities.getWindowAncestor(this),
                 "Set Category Budget", true);
         dlg.setSize(380, 220);
         dlg.setLocationRelativeTo(this);
         dlg.getContentPane().setBackground(AppTheme.BG_PANEL);
         dlg.setLayout(new BorderLayout(0, 0));
-        dlg.getRootPane().setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        dlg.setBackground(AppTheme.BG_PANEL);
+        dlg.getRootPane().setBorder(BorderFactory.createEmptyBorder(10, 14, 12, 14));
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setOpaque(false);
@@ -168,6 +195,10 @@ public class BudgetPanel extends JPanel implements MainWindow.Refreshable {
         catCombo.setFont(AppTheme.FONT_BODY);
         catCombo.addItem(""); // blank default
         manager.getCategoryTotals().keySet().stream().sorted().forEach(catCombo::addItem);
+        // Auto-select the passed category if provided
+        if (preselectedCategory != null) {
+            catCombo.setSelectedItem(preselectedCategory);
+        }
         form.add(catCombo, g);
 
         g.gridy = 1; g.gridx = 0; g.fill = GridBagConstraints.NONE; g.weightx = 0;
@@ -215,9 +246,27 @@ public class BudgetPanel extends JPanel implements MainWindow.Refreshable {
         Map<String, Double> totals  = manager.getCategoryTotals();
 
         if (budgets.isEmpty()) {
-            JLabel empty = AppTheme.subLabel("No budgets set yet. Click '+ Set Budget' to start.");
-            empty.setBorder(BorderFactory.createEmptyBorder(40, 0, 0, 0));
-            listArea.add(empty);
+            // // Centered empty state
+            // JPanel emptyState = new JPanel(new GridBagLayout());
+            // emptyState.setOpaque(false);
+            // JPanel inner = new JPanel();
+            // inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
+            // inner.setOpaque(false);
+            // JLabel emptyIcon = new JLabel("◎");
+            // emptyIcon.setFont(new Font("SansSerif", Font.PLAIN, 48));
+            // emptyIcon.setForeground(AppTheme.TEXT_MUTED);
+            // emptyIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
+            // JLabel emptyMsg = AppTheme.subLabel("No budgets set yet.");
+            // emptyMsg.setAlignmentX(Component.LEFT_ALIGNMENT);
+            // JLabel emptyHint = AppTheme.subLabel("Click '+ Set Budget' above to get started.");
+            // emptyHint.setAlignmentX(Component.LEFT_ALIGNMENT);
+            // inner.add(emptyIcon);
+            // inner.add(Box.createVerticalStrut(8));
+            // inner.add(emptyMsg);
+            // inner.add(Box.createVerticalStrut(4));
+            // inner.add(emptyHint);
+            // emptyState.add(inner);
+            // listArea.add(emptyState);
         } else {
             List<String> cats = new ArrayList<>(budgets.keySet());
             Collections.sort(cats);
@@ -235,20 +284,38 @@ public class BudgetPanel extends JPanel implements MainWindow.Refreshable {
             if (!budgets.containsKey(cat)) {
                 if (!anyUnbudgeted) {
                     listArea.add(Box.createVerticalStrut(16));
-                    listArea.add(AppTheme.subLabel("  Categories without a budget:"));
+                    JLabel sectionLbl = AppTheme.subLabel("Categories without a budget:");
+                    sectionLbl.setFont(AppTheme.FONT_HEADING);
+                    sectionLbl.setBorder(BorderFactory.createEmptyBorder(0, 4, 4, 0));
+                    listArea.add(sectionLbl);
                     listArea.add(Box.createVerticalStrut(6));
                     anyUnbudgeted = true;
                 }
                 double spent = totals.get(cat);
-                JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
-                row.setOpaque(false);
-                row.add(AppTheme.badge(cat, AppTheme.TEXT_MUTED));
-                row.add(AppTheme.subLabel(String.format("₹ %.2f spent — no limit", spent)));
-                JButton setBtn = AppTheme.ghostButton("Set limit");
+                Color catColor = AppTheme.categoryColor(cat);
+
+                JPanel card = AppTheme.card();
+                card.setLayout(new BorderLayout(0, 0));
+                card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
+                card.setAlignmentX(Component.LEFT_ALIGNMENT);
+                JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+                left.setOpaque(false);
+                left.add(AppTheme.badge(cat, catColor));
+                JLabel spentLbl = AppTheme.subLabel(String.format("₹ %.2f spent — no budget/limit set", spent));
+                left.add(spentLbl);
+                card.add(left, BorderLayout.CENTER);
+
+                JButton setBtn = AppTheme.ghostButton("Set Budget");
                 setBtn.setFont(AppTheme.FONT_SMALL);
-                setBtn.addActionListener(e -> showSetBudgetDialog());
-                row.add(setBtn);
-                listArea.add(row);
+                setBtn.setPreferredSize(new Dimension(110, 28));
+                setBtn.addActionListener(e -> showSetBudgetDialog(cat));
+                JPanel btnWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+                btnWrap.setOpaque(false);
+                btnWrap.add(setBtn);
+                card.add(btnWrap, BorderLayout.EAST);
+
+                listArea.add(card);
+                listArea.add(Box.createVerticalStrut(8));
             }
         }
 

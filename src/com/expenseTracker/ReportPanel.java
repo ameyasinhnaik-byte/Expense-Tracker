@@ -1,10 +1,10 @@
 package com.expenseTracker;
 
-import javax.swing.*;
 import java.awt.*;
 import java.time.Month;
 import java.util.*;
 import java.util.List;
+import javax.swing.*;
 
 /**
  * ReportPanel
@@ -18,6 +18,23 @@ public class ReportPanel extends JPanel implements MainWindow.Refreshable {
     private JPanel monthlyChartPanel;
     private JPanel topListPanel;
     private JLabel lblGrandTotal, lblAvgMonthly, lblBiggestExpense;
+
+    // ─── CUSTOM SCROLLBAR ───────────────────────────────────────
+    static class CustomScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
+        @Override protected void configureScrollBarColors() {
+            this.thumbColor = AppTheme.ACCENT_BLUE;
+            this.trackColor = AppTheme.BG_PANEL;
+        }
+        @Override protected JButton createDecreaseButton(int o) { return zeroBtn(); }
+        @Override protected JButton createIncreaseButton(int o) { return zeroBtn(); }
+        private JButton zeroBtn() {
+            JButton b = new JButton();
+            b.setPreferredSize(new Dimension(0, 0));
+            b.setMinimumSize(new Dimension(0, 0));
+            b.setMaximumSize(new Dimension(0, 0));
+            return b;
+        }
+    }
 
     public ReportPanel(ExpenseManager manager) {
         this.manager = manager;
@@ -84,8 +101,9 @@ public class ReportPanel extends JPanel implements MainWindow.Refreshable {
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         topScroll.setOpaque(false);
-        topScroll.getViewport().setOpaque(false);
-        topScroll.setBorder(null);
+        topScroll.getViewport().setBackground(AppTheme.BG_PANEL);
+        topScroll.setBorder(BorderFactory.createEmptyBorder());
+        topScroll.getVerticalScrollBar().setUI(new CustomScrollBarUI());
 
         JPanel topCard = AppTheme.card();
         topCard.setLayout(new BorderLayout(0, 10));
@@ -215,7 +233,7 @@ public class ReportPanel extends JPanel implements MainWindow.Refreshable {
     private JPanel topExpenseRow(int rank, Expense e) {
         JPanel row = new JPanel(new BorderLayout(8, 0));
         row.setOpaque(false);
-        row.setBorder(BorderFactory.createEmptyBorder(8, 0, 8, 0));
+        row.setBorder(BorderFactory.createEmptyBorder(8, 4, 8, 8));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 52));
 
         JLabel rankLbl = new JLabel(String.valueOf(rank));
@@ -237,6 +255,8 @@ public class ReportPanel extends JPanel implements MainWindow.Refreshable {
         JLabel amt = new JLabel("₹ " + String.format("%.2f", e.getAmount()));
         amt.setFont(AppTheme.FONT_LABEL);
         amt.setForeground(AppTheme.ACCENT_GREEN);
+        amt.setHorizontalAlignment(SwingConstants.RIGHT);
+        amt.setPreferredSize(new Dimension(90, 0));
 
         row.add(rankLbl, BorderLayout.WEST);
         row.add(center,  BorderLayout.CENTER);
