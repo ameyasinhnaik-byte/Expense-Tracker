@@ -11,6 +11,12 @@ import java.util.Map;
  * Generates formatted reports from expense data.
  * All methods are static — no need to instantiate this class.
  */
+
+/**
+ * This file was mainly needed for CLI
+ * Since GUI implementation, this file is not used
+ */
+
 public class ReportPrinter {
 
     private static final int BAR_WIDTH = 30; // max chars for bar chart bars
