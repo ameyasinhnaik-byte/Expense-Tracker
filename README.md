@@ -1,4 +1,4 @@
-# Expensio 💰
+# Expensio 
 ### A desktop expense tracker built with Java Swing
 
 Expensio is a clean, dark-themed desktop app for tracking your personal expenses. Add expenses, set budgets, view visual reports, and keep your spending under control — all stored locally on your machine.
