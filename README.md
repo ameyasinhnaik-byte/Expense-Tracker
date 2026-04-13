@@ -124,7 +124,7 @@ Budgets are saved in `budgets.csv`:
 
 ```
 category,limit
-Food,5000.00
+Shopping,5000.00
 Travel,5000.00
 ```
 
